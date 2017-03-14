@@ -4,6 +4,11 @@
    
 This script basically uses `shodan` api to search Raspberry Pi's ip addresses , and tries to `ssh` into them by using the default username: ***pi*** and password: ***raspberrry***, and stores the successful ip addresses into a  text file.  
 
+## Requirements:
+###### Python Modules:
+1. Paramiko (~$easy_install paramiko)  
+2. Shodan (~$easy_install shodan)  
+
 ## Usage:  
 ```python
 user@pc:~$python shodan_raspi.py [source_file_name]
