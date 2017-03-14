@@ -10,8 +10,8 @@ This script basically uses `shodan` api to search Raspberry Pi's ip addresses , 
 2. Shodan (~$easy_install shodan)  
 
 ## Usage:  
-```python
-user@pc:~$python shodan_raspi.py [source_file_name]
+```
+$ python shodan_raspi.py [source_file_name]
 ``` 
 If the source file doesn't exist , it'll be created, using `Shodan` api.  
 The Source File consists of ip address, only one per line.  
