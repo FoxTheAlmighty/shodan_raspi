@@ -4,7 +4,7 @@ import paramiko
 import shodan
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("filenm", help="target file", type=str)
+parser.add_argument("filenm", help="Source file", type=str)
 args = parser.parse_args()
 target_file = str(args.filenm).replace(' ','')
 
@@ -15,7 +15,7 @@ shodan_api = "Your Api Key Here"
 
 #Check if target list is available or not.
 if(os.path.isfile('./'+target_file)==False or os.path.getsize(target_file)==0):
-        print "File not found"
+        print "File not found\nCreating file using Shodan..."
         api = shodan.Shodan(shodan_api)
         try:
                 results = api.search('raspberry')
