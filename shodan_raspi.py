@@ -30,7 +30,7 @@ if(os.path.isfile('./'+target_file)==False or os.path.getsize(target_file)==0):
                 ras.close()
                 print '  File \"%s\" created!'%target_file
         except shodan.APIError, e:
-                print 'Error: %s'%e
+                print '  Error: %s\n  Check the shodan api key!'%e
                 sys.exit()
         except:
                 raise
