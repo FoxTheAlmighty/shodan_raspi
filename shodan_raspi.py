@@ -63,6 +63,10 @@ while (True):
                         #Connection initiated... set the value for timeout 
                         ssh.connect(server, username=username, password=password, timeout=5)
                         print '%3d : %7s : %5s'%(i,server,'Success!')
+                        success=success+1
+                        with open('success_ip.txt','a+') as fl:
+                                fl.write(server)
+                                fl.close()
                         f.close()
                         ssh.close()
                         i=i+1
